@@ -1,0 +1,53 @@
+EXPERIMENTAL RESULTS
+====================
+
+C Sequential (from time command):
+- Count: 1002193
+- Internal time: 0.10 seconds
+- Real time: 3.410 seconds
+- User time: 3.12 seconds
+- System time: 0.28 seconds
+
+C Pthreads (4 threads):
+- Count: 999508
+- Time: 0.16 seconds
+
+Python Sequential:
+- Count: 1001988
+- Internal time: 1.94 seconds
+- Real time: 72.06 seconds
+- User time: 71.49 seconds
+- System time: 0.49 seconds
+
+Python Threading (4 threads):
+- Count: 1000104
+- Time: 7.12 seconds
+
+Python Multiprocessing (4 processes):
+- Count: 1000251
+- Time: 3.41 seconds
+
+SPEEDUP CALCULATIONS
+====================
+
+C Implementation (using user time):
+- Sequential: 3.12s
+- Parallel (4 threads): 0.16s
+- Speedup: 3.12 / 0.16 = 19.50x
+- Efficiency: 19.50 / 4 = 487.5%
+
+Python Implementation (using user time):
+- Sequential: 71.49s
+- Threading (4): 7.12s
+- Multiprocessing (4): 3.41s
+- Threading Speedup: 71.49 / 7.12 = 10.04x
+- Multiprocessing Speedup: 71.49 / 3.41 = 20.96x
+- Threading Efficiency: 10.04 / 4 = 251.0%
+- Multiprocessing Efficiency: 20.96 / 4 = 524.0%
+
+OBSERVATIONS
+============
+1. C is ~23x faster than Python (sequential)
+2. C pthread achieved super-linear speedup (cache effects)
+3. Python multiprocessing bypassed GIL successfully
+4. Python threading showed surprising speedup despite GIL

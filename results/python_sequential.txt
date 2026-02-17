@@ -1,0 +1,2 @@
+Count = 1000243
+Time = 2.41 seconds

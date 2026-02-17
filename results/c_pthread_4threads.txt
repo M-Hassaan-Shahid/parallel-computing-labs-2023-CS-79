@@ -1,0 +1,2 @@
+Count = 1000208
+Time with 4 threads = 0.18 seconds

@@ -1,0 +1,2 @@
+Count = 999829
+Time with 8 threads = 0.20 seconds

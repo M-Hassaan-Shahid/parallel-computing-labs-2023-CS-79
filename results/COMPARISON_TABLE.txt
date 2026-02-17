@@ -1,0 +1,16 @@
+PERFORMANCE COMPARISON TABLE
+============================
+
+Implementation              | Threads | Time (s) | Speedup  | Efficiency
+----------------------------|---------|----------|----------|------------
+C Sequential                |    1    |   3.12   |  1.00x   |   100.0%
+C Pthreads                  |    4    |   0.16   | 19.50x   |   487.5%
+Python Sequential           |    1    |  71.49   |  1.00x   |   100.0%
+Python Threading            |    4    |   7.12   | 10.04x   |   251.0%
+Python Multiprocessing      |    4    |   3.41   | 20.96x   |   524.0%
+
+KEY INSIGHTS:
+- C is 22.9x faster than Python (sequential: 71.49/3.12)
+- C pthread is 21.3x faster than Python multiprocessing (3.41/0.16)
+- Python multiprocessing achieved best Python speedup (20.96x)
+- Super-linear speedup in C suggests cache/memory effects

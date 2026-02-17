@@ -1,0 +1,39 @@
+# Compiled files
+*.o
+*.out
+count_pthread
+search_pthread
+count_seq
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.toc
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.tex
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Results directory (optional - uncomment if you don't want to track results)
+# results/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
