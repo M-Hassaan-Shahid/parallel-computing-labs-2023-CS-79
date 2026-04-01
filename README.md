@@ -1,135 +1,88 @@
-# PDCL Lab - Parallel Computing Performance Analysis
+# Parallel and Distributed Computing Lab Portfolio
 
-**Author:** M. Hassaan Shahid  
-**Registration No:** 2023-CS-79  
-**Course:** PDCL  
-**Professor:** Sir Waqas
+## Student Information
 
-## Overview
+- **Name:** M. Hassaan Shahid
+- **Roll Number:** 2023-CS-79
+- **Course:** Parallel and Distributed Computing
+- **Instructor:** Waqas Ali
 
-This repository contains implementations and performance analysis of parallel counting algorithms using different parallelization techniques in C (pthreads) and Python (threading, multiprocessing).
+## Lab Overview
 
-## Project Structure
+| Lab | Topic             | Key Concepts                                      |
+|-----|-------------------|---------------------------------------------------|
+| 0   | Foundations       | Pthreads, GIL, Amdahl's Law                       |
+| 1   | MPI Introduction  | SPMD, point-to-point, parallel sum                |
+| 2   | Point-to-Point    | MPI_Send, MPI_Recv, tags, wildcards               |
+| 3   | Collectives       | Bcast, Reduce, Scatter, Gather                    |
+
+## Repository Structure
 
 ```
-.
-├── count_seq.py              # Python sequential implementation
-├── count_threads.py          # Python threading implementation
-├── count_mp.py               # Python multiprocessing implementation
-├── count_pthread.c           # C pthread implementation
-├── search_pthread.c          # C pthread search with early termination
-├── lab_report.tex            # Complete LaTeX report
-├── generate_correct_graph.py # Graph generation script
-├── run_complete_experiments.sh # Automated experiment runner
-└── results/                  # Experimental results and graphs
+parallel-computing-labs-2023cs79/
+│
+├── lab0/
+│   ├── count_seq.c          # Sequential C baseline
+│   ├── count_pthread.c      # POSIX threads implementation
+│   ├── count_seq.py         # Sequential Python baseline
+│   ├── count_threads.py     # Python threading (GIL demo)
+│   ├── count_mp.py          # Python multiprocessing
+│   ├── search_pthread.c     # Pthread search with early termination
+│   └── README.md
+│
+├── lab1/
+│   ├── hello_mpi.c          # MPI Hello World
+│   ├── pingpong.c           # Ping-pong latency/bandwidth benchmark
+│   ├── count_mpi.c          # Parallel counting with MPI_Reduce
+│   ├── count_seq.c          # Sequential baseline
+│   └── README.md
+│
+├── lab2/
+│   ├── send_recv.c          # Basic MPI_Send / MPI_Recv
+│   ├── parallel_sum.c       # Manual parallel sum via point-to-point
+│   ├── custom_gather.c      # Ordered manual gather
+│   ├── wildcard_gather.c    # Wildcard (MPI_ANY_SOURCE) gather
+│   └── README.md
+│
+├── lab3/
+│   ├── bcast.c              # MPI_Bcast demo
+│   ├── reduce_sum.c         # MPI_Reduce parallel sum
+│   ├── scatter_gather.c     # MPI_Scatter + MPI_Gather
+│   ├── matvec.c             # Parallel matrix-vector multiplication
+│   ├── scatterv_gatherv.c   # Uneven distribution with Scatterv/Gatherv
+│   └── README.md
+│
+└── README.md                # This file
 ```
 
-## Quick Start
+## How to Use This Repository
 
-### 1. Run Experiments
-```bash
-# Make script executable
-chmod +x run_complete_experiments.sh
+Each lab folder contains its own `README.md` with:
+- An overview of what the lab covers
+- A description of every source file
+- Compilation and execution instructions
+- Example output
+- Challenges encountered and how they were resolved
 
-# Run all experiments
-./run_complete_experiments.sh
-```
-
-### 2. Generate Graphs
-```bash
-# Install matplotlib (if needed)
-sudo apt-get install python3-matplotlib
-
-# Generate speedup graphs
-python3 generate_correct_graph.py
-```
-
-### 3. Compile Report
-```bash
-# Install LaTeX (if needed)
-sudo apt-get install texlive-full
-
-# Compile report
-pdflatex lab_report.tex
-pdflatex lab_report.tex  # Run twice for TOC
-
-# View PDF
-xdg-open lab_report.pdf
-```
-
-## Manual Compilation
-
-### C Programs
-```bash
-# Compile with optimizations
-gcc -O2 -pthread -o count_pthread count_pthread.c
-gcc -O2 -pthread -o search_pthread search_pthread.c
-
-# Run
-./count_pthread
-./search_pthread
-```
-
-### Python Programs
-```bash
-python3 count_seq.py
-python3 count_threads.py
-python3 count_mp.py
-```
-
-## Key Results
-
-| Implementation | Threads | Time (s) | Speedup |
-|----------------|---------|----------|---------|
-| C Sequential | 1 | 3.12 | 1.00× |
-| C Pthreads | 4 | 0.16 | 19.50× |
-| Python Sequential | 1 | 71.49 | 1.00× |
-| Python Threading | 4 | 7.12 | 10.04× |
-| Python Multiprocessing | 4 | 3.41 | 20.96× |
-
-### Key Findings
-- C achieved super-linear speedup (19.50× with 4 threads)
-- Python multiprocessing successfully bypassed GIL (20.96× speedup)
-- C is 22.9× faster than Python (sequential comparison)
-- Python threading showed 10.04× speedup despite GIL
-
-## System Specifications
-
-- **CPU:** Intel Core i5-8265U @ 1.60GHz
-- **Cores:** 4 physical cores, 8 logical (with Hyper-Threading)
-- **OS:** Linux (Ubuntu 24.04)
-- **Compiler:** GCC with -O2 optimization
-- **Python:** 3.12
-
-## Dependencies
-
-- GCC with pthread support
-- Python 3.6+
-- matplotlib (for graph generation)
-- LaTeX distribution (for report compilation)
-
-## Installation
+### Prerequisites
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get install build-essential python3-matplotlib texlive-full
+# Ubuntu / Debian
+sudo apt-get install build-essential openmpi-bin libopenmpi-dev python3
 
-# Verify installation
+# Verify
 gcc --version
+mpicc --version
 python3 --version
-pdflatex --version
 ```
 
-## Documentation
+### Quick Compile (any lab)
 
-- `lab_report.pdf` - Complete lab report with analysis
-- `README.md` - This file
-- Source code comments - Inline documentation
+```bash
+# C programs (replace with actual filename)
+gcc -O2 -pthread -o <binary> <file>.c        # pthreads
+mpicc -O2 -o <binary> <file>.c               # MPI
 
-## License
-
-This project is for educational purposes as part of the PDCL course.
-
-## Contact
-
-M. Hassaan Shahid - 2023-CS-79
+# Python programs
+python3 <file>.py
+```
