@@ -2,22 +2,22 @@
 #include <mpi.h>
 
 int main(int argc, char** argv) {
-    int proc_rank, proc_size;
-    int shared_value;
+    int rank, size;
+    int data;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &proc_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    // Master process initializes the shared value
-    if (proc_rank == 0) {
-        shared_value = 1000;
-        printf("Master Process %d is broadcasting value %d to all workers\n", proc_rank, shared_value);
+    if (rank == 0) {
+        // Root initialises the data
+        data = 1000;
+        printf("Process %d broadcasting value %d\n", rank, data);
     }
 
-    // All processes participate in the broadcast operation
-    MPI_Bcast(&shared_value, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Worker Process %d has received shared value = %d\n", proc_rank, shared_value);
+    // All processes call MPI_Bcast
+    MPI_Bcast(&data, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("Process %d received data = %d\n", rank, data);
 
     MPI_Finalize();
     return 0;

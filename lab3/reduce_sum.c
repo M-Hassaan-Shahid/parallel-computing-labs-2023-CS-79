@@ -2,39 +2,38 @@
 #include <mpi.h>
 
 int main(int argc, char** argv) {
-    int proc_rank, proc_size;
-    int partial_sum = 0, aggregated_sum = 0;
-    int range_start, range_end;
-    double timer_start, timer_end;
+    int rank, size;
+    int local_sum = 0, global_sum = 0;
+    int startval, endval;
+    double start_time, end_time;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &proc_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    // Compute the range of numbers for this process
-    range_start = 1000 * proc_rank / proc_size + 1;
-    range_end   = 1000 * (proc_rank + 1) / proc_size;
+    // Determine range for each process (same as Lab 2)
+    startval = 1000 * rank / size + 1;
+    endval   = 1000 * (rank + 1) / size;
 
-    // Synchronize all processes before timing
+    // Synchronise before timing
     MPI_Barrier(MPI_COMM_WORLD);
-    timer_start = MPI_Wtime();
+    start_time = MPI_Wtime();
 
-    // Calculate partial sum for this process's range
-    for (int idx = range_start; idx <= range_end; idx++) {
-        partial_sum += idx;
+    // Compute local sum
+    for (int i = startval; i <= endval; i++) {
+        local_sum += i;
     }
 
-    // Aggregate all partial sums using reduction
-    MPI_Reduce(&partial_sum, &aggregated_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    // Reduce all local sums to global sum on rank 0
+    MPI_Reduce(&local_sum, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    timer_end = MPI_Wtime();
+    end_time = MPI_Wtime();
 
-    // Master process displays results
-    if (proc_rank == 0) {
-        printf("Aggregated sum from 1 to 1000: %d\n", aggregated_sum);
-        printf("Execution time with %d processes: %.8f seconds\n", proc_size, timer_end - timer_start);
-        int verification = 1000 * 1001 / 2;
-        printf("Verification (expected sum): %d\n", verification);
+    if (rank == 0) {
+        printf("The sum from 1 to 1000 is: %d\n", global_sum);
+        printf("Time with %d processes: %f seconds\n", size, end_time - start_time);
+        int expected = 1000 * 1001 / 2;
+        printf("Expected sum: %d\n", expected);
     }
 
     MPI_Finalize();

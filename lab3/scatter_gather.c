@@ -2,80 +2,63 @@
 #include <stdlib.h>
 #include <mpi.h>
 
-#define DATASET_SIZE 1000
+#define N 1000  // total array size
 
 int main(int argc, char** argv) {
-    int proc_rank, proc_size;
-    int *dataset = NULL;
-    int *chunk_data;
-    int chunk_size;
-    int chunk_sum = 0, total_result = 0;
-    double timer_start, timer_end;
+    int rank, size;
+    int *array = NULL;
+    int *local_array;
+    int local_n;
+    int local_sum = 0, total_sum = 0;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &proc_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    // Verify even distribution is possible
-    if (DATASET_SIZE % proc_size != 0) {
-        if (proc_rank == 0)
-            printf("Dataset size %d is not divisible by %d processes. Use scatterv instead.\n", DATASET_SIZE, proc_size);
-        MPI_Finalize();
-        return 1;
+    // Determine size of each chunk (assume N divisible by size for simplicity)
+    local_n = N / size;
+    local_array = (int*) malloc(local_n * sizeof(int));
+
+    if (rank == 0) {
+        // Root initialises the full array
+        array = (int*) malloc(N * sizeof(int));
+        for (int i = 0; i < N; i++)
+            array[i] = i + 1;  // 1,2,3,...,N
     }
 
-    chunk_size = DATASET_SIZE / proc_size;
-    chunk_data = (int*) malloc(chunk_size * sizeof(int));
-
-    // Master process initializes the complete dataset
-    if (proc_rank == 0) {
-        dataset = (int*) malloc(DATASET_SIZE * sizeof(int));
-        for (int i = 0; i < DATASET_SIZE; i++)
-            dataset[i] = i + 1;
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
-    timer_start = MPI_Wtime();
-
-    // Distribute dataset chunks to all processes
-    MPI_Scatter(dataset, chunk_size, MPI_INT,
-                chunk_data, chunk_size, MPI_INT,
+    // Scatter the array from root to all processes
+    MPI_Scatter(array, local_n, MPI_INT, local_array, local_n, MPI_INT,
                 0, MPI_COMM_WORLD);
 
-    // Each process computes sum of its chunk
-    for (int i = 0; i < chunk_size; i++)
-        chunk_sum += chunk_data[i];
+    // Compute local sum
+    for (int i = 0; i < local_n; i++)
+        local_sum += local_array[i];
 
-    printf("Process %d: chunk sum = %d\n", proc_rank, chunk_sum);
+    printf("Process %d: local sum = %d\n", rank, local_sum);
 
-    // Aggregate all chunk sums
-    MPI_Reduce(&chunk_sum, &total_result, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    // Option 1: Use MPI_Reduce to get total sum
+    MPI_Reduce(&local_sum, &total_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    // Collect individual sums for verification
-    int *collected_sums = NULL;
-    if (proc_rank == 0)
-        collected_sums = (int*) malloc(proc_size * sizeof(int));
+    // Option 2: Use MPI_Gather to collect all local sums (just for practice)
+    int *all_sums = NULL;
+    if (rank == 0)
+        all_sums = (int*) malloc(size * sizeof(int));
 
-    MPI_Gather(&chunk_sum, 1, MPI_INT,
-               collected_sums, 1, MPI_INT,
-               0, MPI_COMM_WORLD);
+    MPI_Gather(&local_sum, 1, MPI_INT, all_sums, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    timer_end = MPI_Wtime();
-
-    // Master process displays results
-    if (proc_rank == 0) {
-        printf("Total sum via MPI_Reduce: %d\n", total_result);
-        printf("Individual chunk sums via MPI_Gather: ");
-        for (int i = 0; i < proc_size; i++)
-            printf("%d ", collected_sums[i]);
+    if (rank == 0) {
+        printf("Total sum via MPI_Reduce: %d\n", total_sum);
+        printf("Collected sums: ");
+        for (int i = 0; i < size; i++)
+            printf("%d ", all_sums[i]);
         printf("\n");
-        printf("Expected total sum = %d\n", DATASET_SIZE * (DATASET_SIZE + 1) / 2);
-        printf("Execution time with %d processes: %.8f seconds\n", proc_size, timer_end - timer_start);
-        free(dataset);
-        free(collected_sums);
+        printf("Expected total sum = %d\n", N * (N + 1) / 2);
+
+        free(array);
+        free(all_sums);
     }
 
-    free(chunk_data);
+    free(local_array);
     MPI_Finalize();
     return 0;
 }
