@@ -1,62 +1,45 @@
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpi.h>
 
-#define NUM_ITERS  100
-#define MSG_SIZE   1000
+#define PING_PONG_LIMIT 10000
 
-int main(int argc, char **argv) {
-    int rank;
-    double start, end;
-    double *buffer;
-
+int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    buffer = (double *) malloc(MSG_SIZE * sizeof(double));
-    if (!buffer) {
-        fprintf(stderr, "malloc failed\n");
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    if (world_size != 2) {
+        fprintf(stderr, "This program requires exactly 2 processes.\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* Warm-up */
-    if (rank == 0) {
-        MPI_Send(buffer, MSG_SIZE, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
-        MPI_Recv(buffer, MSG_SIZE, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    } else if (rank == 1) {
-        MPI_Recv(buffer, MSG_SIZE, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Send(buffer, MSG_SIZE, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-    }
+    int ping_pong_count = 0;
+    int partner_rank = (world_rank == 0) ? 1 : 0;
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    start = MPI_Wtime();
+    double start_time = MPI_Wtime();
 
-    for (int i = 0; i < NUM_ITERS; i++) {
-        if (rank == 0) {
-            MPI_Send(buffer, MSG_SIZE, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD);
-            MPI_Recv(buffer, MSG_SIZE, MPI_DOUBLE, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        } else if (rank == 1) {
-            MPI_Recv(buffer, MSG_SIZE, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Send(buffer, MSG_SIZE, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+    while (ping_pong_count < PING_PONG_LIMIT) {
+        if (world_rank == ping_pong_count % 2) {
+            ping_pong_count++;
+            MPI_Send(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD);
+            printf("Process %d sent %d to process %d\n", world_rank, ping_pong_count, partner_rank);
+        } else {
+            MPI_Recv(&ping_pong_count, 1, MPI_INT, partner_rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            printf("Process %d received %d from process %d\n", world_rank, ping_pong_count, partner_rank);
         }
     }
 
-    end = MPI_Wtime();
-
-    if (rank == 0) {
-        double total_bytes = 2.0 * NUM_ITERS * MSG_SIZE * sizeof(double);
-        double elapsed     = end - start;
-        double latency_us  = (elapsed / (2.0 * NUM_ITERS)) * 1e6;
-        double bandwidth   = total_bytes / elapsed / 1e6;  /* MB/s */
-
-        printf("Ping-Pong results (%d iterations, %d doubles per message):\n",
-               NUM_ITERS, MSG_SIZE);
-        printf("  Total time : %.6f s\n", elapsed);
-        printf("  Latency    : %.3f us (one-way)\n", latency_us);
-        printf("  Bandwidth  : %.2f MB/s\n", bandwidth);
+    double end_time = MPI_Wtime();
+    if (world_rank == 0) {
+        printf("Ping-pong completed in %f seconds\n", end_time - start_time);
+        printf("Average round-trip time: %f microseconds\n",
+               (end_time - start_time) * 1e6 / PING_PONG_LIMIT);
     }
 
-    free(buffer);
     MPI_Finalize();
     return 0;
 }
