@@ -1,2 +1,0 @@
-Count = 999160
-Time with 1 threads = 0.09 seconds

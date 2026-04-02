@@ -1,2 +1,0 @@
-Count = 999628
-Time with 4 processes = 1.50 seconds
