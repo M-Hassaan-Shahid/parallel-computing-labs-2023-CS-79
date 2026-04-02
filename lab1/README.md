@@ -10,6 +10,7 @@ This lab introduces the Message Passing Interface (MPI) programming model. It co
 - `pingpong.c` – Classic MPI ping-pong benchmark between process 0 and process 1; measures one-way latency and bandwidth
 - `count_mpi.c` – MPI parallel counting of a target value in a 100-million-element distributed array using `MPI_Reduce`
 - `count_seq.c` – Sequential baseline used for speedup comparison
+- `pi_mpi.c` – MPI parallel estimation of π using numerical integration with `MPI_Bcast` and `MPI_Reduce`
 
 ## Compilation and Execution
 
@@ -29,6 +30,10 @@ mpirun -np 4 ./count_mpi
 # Sequential baseline
 gcc -O2 -o count_seq count_seq.c
 ./count_seq
+
+# Pi estimation (link math library)
+mpicc -O2 -o pi_mpi pi_mpi.c -lm
+mpirun -np 4 ./pi_mpi
 ```
 
 ## Example Output
